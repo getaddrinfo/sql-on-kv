@@ -1,0 +1,279 @@
+#include "lexer.hh"
+
+#include <unordered_map>
+
+#include "absl/log/log.h"
+#include "absl/log/check.h"
+#include "absl/strings/str_format.h"
+
+namespace sql::lexer {
+  std::vector<Token> lex(const std::string& source) {
+    std::vector<Token> tokens;
+    std::string_view view(source);
+    detail::consumption_state__ tokeniser(view);
+
+    while (!tokeniser.finished()) {
+      sql::lexer::Token token = tokeniser.consume();
+
+      LOG(INFO) << token.type_name();
+
+      if (token.literal) {
+        LOG(INFO) << *token.literal;
+      }
+
+      tokens.push_back(token);
+    }
+
+    tokens.emplace_back(sql::lexer::TokenType::End, std::nullopt);
+
+    return tokens;
+  }
+
+  const std::string Token::type_name() {
+    static std::unordered_map<TokenType, const std::string> map = {
+      {TokenType::Error, "Error"},
+      {TokenType::Asterisk, "Asterisk"},
+      {TokenType::Comma, "Comma"},
+      {TokenType::Space, "Space"},
+      {TokenType::Ident, "Ident"},
+      {TokenType::Equals, "Equals"},
+      {TokenType::Assign, "Assign"},
+      {TokenType::Delim, "Delim"},
+      {TokenType::LeftParen, "LeftParen"},
+      {TokenType::RightParen, "RightParen"},
+      {TokenType::TemplatePlaceholder, "TemplatePlaceholder"},
+      {TokenType::Integer, "Integer"},
+      {TokenType::String, "String"},
+      {TokenType::And, "And"},
+      {TokenType::Insert, "Insert"},
+      {TokenType::Into, "Into"},
+      {TokenType::Select, "Select"},
+      {TokenType::Delete, "Delete"},
+      {TokenType::From, "From"},
+      {TokenType::Where, "Where"},
+      {TokenType::Limit, "Limit"},
+      {TokenType::Values, "Values"},
+      {TokenType::Update, "Update"},
+      {TokenType::Set, "Set"},
+      {TokenType::Create, "Create"},
+      {TokenType::Drop, "Drop"},
+      {TokenType::Table, "Table"},
+      {TokenType::Semicolon, "Semicolon"},
+      {TokenType::End, "End"},
+    };
+
+    auto result = map.find(ty);
+    CHECK(result != map.end()) << "Unknown token type: " << static_cast<int>(ty);
+
+    return result->second;
+  }
+
+  namespace detail {    
+    Token consumption_state__::consume() {
+      char curr = current();
+
+      // TODO: Change these branches to a quick map read, since 
+      // `literal` doesn't need to be specified.
+      if (is_comma(curr)) {
+        Token token {
+          .ty = TokenType::Comma,
+          .literal = std::nullopt
+        };
+
+        next();
+        return token;
+      }
+
+      if (is_semicolon(curr)) {
+        Token token {
+          .ty = TokenType::Semicolon,
+          .literal = std::nullopt
+        };
+
+        next();
+        return token;
+      }
+
+      if (is_asterisk(curr)) {
+        Token token {
+          .ty = TokenType::Asterisk,
+          .literal = std::nullopt
+        };
+
+        next();
+        return token;
+      }
+
+      if (is_space(curr)) {
+        Token token {
+          .ty = TokenType::Space,
+          .literal = std::nullopt
+        };
+
+        next();
+        return token;
+      }
+
+      if (is_open_bracket(curr)) {
+        Token token {
+          .ty = TokenType::RightParen,
+          .literal = std::nullopt
+        };
+
+        next();
+        return token;
+      }
+
+      if (is_close_bracket(curr)) {
+        Token token {
+          .ty = TokenType::LeftParen,
+          .literal = std::nullopt
+        };
+
+        next();
+        return token;
+      }
+
+      // Must be a branch
+      if (is_integer(curr)) {
+        detail::int_consumer__ consumer(*this);
+        return consumer.consume();
+      }
+
+      // Must be a branch
+      if (is_string(curr)) {
+        detail::string_consumer__ consumer(*this);
+        return consumer.consume();
+      }
+
+      CHECK(false) << absl::StrFormat(
+        "unreachable: input %c reached this point",
+        curr
+      );
+    }
+
+    bool consumption_state__::next() {
+      if (_curr_index == _data.size()) {
+        return false;
+      }
+      
+      _curr_index++;
+      return true;
+    }
+
+    void consumption_state__::back() {
+      if (_curr_index == 0) {
+        return;
+      }
+
+      _curr_index--;
+    }
+
+    const char consumption_state__::current() const {
+      return _data.at(_curr_index);
+    }
+
+    const size_t consumption_state__::index() const {
+      return _curr_index;
+    }
+    
+    const bool consumption_state__::finished() const {
+      return _curr_index == _data.size();
+    }
+
+
+    const std::string_view consumption_state__::data() const {
+      return _data;
+    }
+
+    Token string_consumer__::consume() {
+      size_t offset = _parent.index();
+      size_t size = 0;
+
+      do {
+        char c = _parent.current();
+
+        if (!is_string(c)) {
+          break;
+        }
+        
+        size++;
+      } while (_parent.next());
+
+      return Token{
+        .ty = TokenType::String,
+        .literal = _parent.data().substr(
+          offset,
+          size
+        )
+      };
+    }
+
+    Token int_consumer__::consume() {
+      size_t offset = _parent.index();
+      size_t size = 0;
+
+      do {
+        char c = _parent.current();
+
+        if (!is_integer(c)) {
+          break;
+        }
+
+        size++;
+      } while (_parent.next());
+
+      return Token{
+        .ty = TokenType::Integer,
+        .literal = _parent.data().substr(
+          offset,
+          size
+        )
+      };
+    }
+
+    bool is_asterisk(char c) {
+      return c == '*';
+    }
+
+    bool is_string(char c) {
+      if (c == '"') {
+        return true;
+      }
+
+      if (c >= 'a' && c <= 'z') {
+        return true;
+      }
+
+      if (c >= 'A' && c <= 'Z') {
+        return true;
+      }
+
+      return false;
+    }
+
+    bool is_comma(char c) {
+      return c == ',';
+    }
+    
+    bool is_integer(char c) {
+      return c >= '0' && c <= '9';
+    }
+
+    bool is_space(char c) {
+      return c == ' ';
+    }
+
+    bool is_open_bracket(char c) {
+      return c == '(';
+    }
+
+    bool is_close_bracket(char c) {
+      return c == ')';
+    }
+
+    bool is_semicolon(char c) {
+      return c == ';';
+    }
+  }
+}
