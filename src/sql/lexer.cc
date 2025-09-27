@@ -6,6 +6,9 @@
 #include "absl/log/check.h"
 #include "absl/strings/str_format.h"
 
+#include <string>
+#include <string_view>
+
 namespace sql::lexer {
   std::vector<Token> lex(const std::string& source) {
     std::vector<Token> tokens;
@@ -28,6 +31,46 @@ namespace sql::lexer {
 
     return tokens;
   }
+
+  struct string_view_hash {
+    using is_transparent = void;
+    
+    size_t operator()(std::string_view sv) const noexcept {
+      return std::hash<std::string_view>{}(sv);
+    }
+
+    template<std::convertible_to<std::string_view> T>
+    size_t operator()(T const& t) const noexcept {
+      return std::hash<std::string_view>{}(std::string_view(t));
+    }
+  };
+
+  struct string_view_eq {
+    using is_transparent = void;
+    
+    template<std::convertible_to<std::string_view> L,
+      std::convertible_to<std::string_view> R>
+    bool operator()(L const& l, R const& r) const noexcept {
+      return std::string_view(l) == std::string_view(r);
+    }
+  };
+
+  static std::unordered_map<const std::string, TokenType, string_view_hash, string_view_eq> _keywords = {
+    {"AND", TokenType::And},
+    {"INSERT", TokenType::Insert},
+    {"INTO", TokenType::Into},
+    {"SELECT", TokenType::Select},
+    {"DELETE", TokenType::Delete},
+    {"FROM", TokenType::From},
+    {"WHERE", TokenType::Where},
+    {"LIMIT", TokenType::Limit},
+    {"VALUES", TokenType::Values},
+    {"UPDATE", TokenType::Update},
+    {"SET", TokenType::Set},
+    {"CREATE", TokenType::Create},
+    {"DROP", TokenType::Drop},
+    {"TABLE", TokenType::Table}
+  };
 
   const std::string Token::type_name() {
     static std::unordered_map<TokenType, const std::string> map = {
@@ -198,6 +241,21 @@ namespace sql::lexer {
         }
         
         size++;
+
+        const std::string_view current_word = _parent.data().substr(
+          offset,
+          size
+        );
+
+        if (_keywords.find(current_word) != _keywords.end()) {
+          // Consume last token
+          _parent.next();
+
+          return Token{
+            .ty = _keywords.find(current_word)->second,
+            .literal = current_word
+          };
+        }
       } while (_parent.next());
 
       return Token{
