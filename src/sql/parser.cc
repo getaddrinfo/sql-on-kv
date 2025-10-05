@@ -114,7 +114,7 @@ namespace sql::parser {
         }
       }
 
-      stream << "} ";
+      stream << '}';
 
       CHECK(false) << "Expected token to be one of "
         << stream.str()
