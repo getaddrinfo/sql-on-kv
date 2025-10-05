@@ -4,6 +4,7 @@ cc_binary(
   deps = [
     "//src/sql/parser",
     "//src/sql/lexer",
+    "//src/cli/repl",
     "@abseil-cpp//absl/log",
     "@abseil-cpp//absl/log:check",
     "@abseil-cpp//absl/log:flags",
