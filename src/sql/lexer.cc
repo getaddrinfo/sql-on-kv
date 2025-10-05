@@ -18,11 +18,11 @@ namespace sql::lexer {
     while (!tokeniser.finished()) {
       sql::lexer::Token token = tokeniser.consume();
 
-      LOG(INFO) << token.type_name();
-
-      if (token.literal) {
-        LOG(INFO) << *token.literal;
-      }
+      LOG(INFO) 
+        << token.type_name()
+        << '('
+        << token.literal.value_or("")
+        << ')';
 
       tokens.push_back(token);
     }
@@ -314,7 +314,8 @@ namespace sql::lexer {
         prev = c;
       } while (_parent.next());
 
-
+      // Skip the last quote.
+      _parent.next();
 
       return Token{
         .ty = TokenType::String,
