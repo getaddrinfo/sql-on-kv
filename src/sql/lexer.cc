@@ -21,13 +21,13 @@ namespace sql::lexer {
       LOG(INFO) 
         << token.type_name()
         << '('
-        << token.literal.value_or("")
+        << token.literal
         << ')';
 
       tokens.push_back(token);
     }
 
-    tokens.emplace_back(sql::lexer::TokenType::End, std::nullopt);
+    tokens.emplace_back(sql::lexer::TokenType::End, tokeniser.data().substr(0, tokeniser.index() - 1));
 
     return tokens;
   }
@@ -128,7 +128,7 @@ namespace sql::lexer {
       if (is_comma(curr)) {
         Token token {
           .ty = TokenType::Comma,
-          .literal = std::nullopt
+          .literal = _data.substr(index(), 1)
         };
 
         next();
@@ -138,7 +138,7 @@ namespace sql::lexer {
       if (is_semicolon(curr)) {
         Token token {
           .ty = TokenType::Semicolon,
-          .literal = std::nullopt
+          .literal = _data.substr(index(), 1)
         };
 
         next();
@@ -148,7 +148,7 @@ namespace sql::lexer {
       if (is_asterisk(curr)) {
         Token token {
           .ty = TokenType::Asterisk,
-          .literal = std::nullopt
+          .literal = _data.substr(index(), 1)
         };
 
         next();
@@ -158,7 +158,7 @@ namespace sql::lexer {
       if (is_space(curr)) {
         Token token {
           .ty = TokenType::Space,
-          .literal = std::nullopt
+          .literal = _data.substr(index(), 1)
         };
 
         next();
@@ -168,7 +168,7 @@ namespace sql::lexer {
       if (is_open_bracket(curr)) {
         Token token {
           .ty = TokenType::RightParen,
-          .literal = std::nullopt
+          .literal = _data.substr(index(), 1)
         };
 
         next();
@@ -178,7 +178,7 @@ namespace sql::lexer {
       if (is_close_bracket(curr)) {
         Token token {
           .ty = TokenType::LeftParen,
-          .literal = std::nullopt
+          .literal = _data.substr(index(), 1)
         };
 
         next();
@@ -188,7 +188,7 @@ namespace sql::lexer {
       if (is_equals(curr)) {
         Token token {
           .ty = TokenType::Equals,
-          .literal = std::nullopt
+          .literal = _data.substr(index(), 1)
         };
         
         next();

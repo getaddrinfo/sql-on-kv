@@ -44,13 +44,10 @@ namespace sql::lexer {
 
   struct Token {
     TokenType ty;
-    std::optional<const std::string_view> literal;
-
+    const std::string_view literal;
+    
     const std::string& type_name() const;
   };
-
-
-
 
   std::vector<Token> lex(const std::string& source);
 

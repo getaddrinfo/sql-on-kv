@@ -88,7 +88,7 @@ namespace sql::parser {
         << " but is of type "
         << sql::lexer::token_type_name(token().ty)
         << '('
-        << token().literal.value_or("<no literal>")
+        << token().literal
         << ')';
     }
 
@@ -120,7 +120,7 @@ namespace sql::parser {
         << stream.str()
         << " but got " << token().type_name()
         << '('
-        << token().literal.value_or("<no literal>")
+        << token().literal
         << ')';
     }
 
@@ -162,7 +162,7 @@ namespace sql::parser {
 
         // Consume the token, and add the fields to the strings
         const sql::lexer::Token& str = reader.token();
-        fields.push_back(std::string(str.literal.value()));
+        fields.push_back(std::string(str.literal));
         
         reader.next();
         
@@ -183,7 +183,7 @@ namespace sql::parser {
 
       reader.must(TokenType::Ident);
       std::string table(
-        reader.token().literal.value()
+        reader.token().literal
       );
 
       reader.next();
@@ -202,7 +202,7 @@ namespace sql::parser {
       reader.must(TokenType::Ident);
 
       std::string field(
-        reader.token().literal.value()
+        reader.token().literal
       );
 
       reader.next();
@@ -228,7 +228,7 @@ namespace sql::parser {
       // For now, assume it's a string.
 
       std::string value(
-        reader.token().literal.value()
+        reader.token().literal
       );
     
 
