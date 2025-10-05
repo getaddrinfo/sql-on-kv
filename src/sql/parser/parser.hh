@@ -8,14 +8,12 @@
 #include <variant>
 
 namespace sql::parser {
-  // TODO: Each member of this should be a `std::unique_ptr`
-  // since stack allocating these objects could get large.
-  //
-  // TODO: Should this really be done using polymorphism?
-  // 
-  // We still need to do the discrimination upon the base class
-  // using either a `type()` method, or 
-  // `dynamic_cast<Desired*>(ptr) != nullptr`.
+  /**
+   * A variant of all the types of queries that can be parsed by
+   * the parser.
+   * 
+   * TODO: Is this better as an inheritance heirarchy?
+   */
   using ParseResult = std::variant<
     statement::select,
     statement::update,
@@ -25,6 +23,12 @@ namespace sql::parser {
     statement::drop_table
   >;
 
+  /**
+   * Parses a vector of `Token`s and returns a ParseResult holding the
+   * parsed query.
+   * 
+   * @throws
+   */
   ParseResult parse(const std::vector<sql::lexer::Token>& tokens);
 }
 

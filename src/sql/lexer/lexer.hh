@@ -8,8 +8,15 @@
 #include "token.hh"
 
 namespace sql::lexer {
+  /**
+   * The type used to represent tokens that the lexing process
+   * produces.
+   */
   using Tokens = std::vector<Token>;
 
+  /**
+   * Lex a string into tokens for SQL.
+   */
   Tokens lex(const std::string& source);
 }
 

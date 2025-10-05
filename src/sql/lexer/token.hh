@@ -4,6 +4,9 @@
 #include <string_view>
 
 namespace sql::lexer {
+  /**
+   * Represents the type that the token is.
+   */
   enum class Type {
     Error,
     Asterisk,
@@ -39,6 +42,11 @@ namespace sql::lexer {
   };
 
 
+  /**
+   * Represents an instance of a type of token,
+   * with a view to the data that comprises this token,
+   * and the type it is.
+   */
   struct Token {
   private:
     const Type _type;
@@ -50,10 +58,24 @@ namespace sql::lexer {
       const std::string_view literal
     ) : _type(type), _literal(literal) {}
 
+    /**
+     * Gets the type of this token.
+     */
     const Type type() const;
+
+    /**
+     * Gets a view to the contents of this token.
+     */
     const std::string_view literal() const;
+
+    /**
+     * Gets a string representation of the name of this token.
+     */
     const std::string& type_name() const;
 
+    /**
+     * Gets a string representation of the name of the given type.
+     */
     static const std::string& type_name(const Type type);
   };
 

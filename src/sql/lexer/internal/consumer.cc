@@ -37,6 +37,7 @@ namespace sql::lexer::detail {
       
       size++;
 
+      // Check for a valid keyword based on the current data.
       const std::string_view current_word = _parent.data().substr(
         offset,
         size
@@ -66,6 +67,10 @@ namespace sql::lexer::detail {
     do {
       char c = _parent.current();
 
+      // If the previous quote wasn't an escape char, and the current
+      // character is a quote character, and this isn't the first character 
+      // (since that is always a quote), then break out of the loop and yield
+      // a token.
       if (size > 0 && is_quote(c) && prev != '\\') {
         break;
       }

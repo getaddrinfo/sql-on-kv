@@ -13,10 +13,18 @@
 #include "internal/statement_parser.hh"
 
 namespace sql::parser {
+  /**
+   * Represents a function that takes a `token_reader` and 
+   * returns a `ParseResult`, which represents a variant of 
+   * different query types modelled as a class.
+   */
   using ParserFn = std::function<
     ParseResult (detail::token_reader__&)
   >;
 
+  /**
+   * Maps from a Type to a function that can parse the given Type.
+   */
   static std::unordered_map<sql::lexer::Type, ParserFn> _dispatcher = {
     {sql::lexer::Type::Select, [](detail::token_reader__& reader) {
       return ParseResult(detail::statement::parser::parse_select(reader));

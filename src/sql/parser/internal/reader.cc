@@ -7,6 +7,8 @@
 
 namespace sql::parser::detail {
   bool token_reader__::empty() const {
+    // If we are at the last slot, then our index is
+    // one less than the number of tokens.
     return _index + 1 == _tokens.size();
   }
 
@@ -53,12 +55,18 @@ namespace sql::parser::detail {
   void token_reader__::must_one_of(
     std::initializer_list<sql::lexer::Type> tys
   ) {
-    for(const sql::lexer::Type ty : tys) {
-      if (is(ty)) {
-        return;
-      }
+    // Instead of doing CHECK(is_one_of(tys)), we 
+    // return early to save any expensive computation to produce the stream
+    // that represents the number of tokens.
+    //
+    // TODO: If we used variadic template args, maybe we could produce a constexpr
+    // version of the pretty printed types.
+    if (is_one_of(tys)) {
+      return;
     }
 
+    // Produce a pretty version of the names of tokens.
+    // TODO: Move this to its own function?
     std::ostringstream stream;
     stream << '{';
 
@@ -74,6 +82,7 @@ namespace sql::parser::detail {
 
     stream << '}';
 
+    // Follows from `is_one_of(tys)` not resulting in an early bail.
     CHECK(false) << "Expected token to be one of "
       << stream.str()
       << " but got " << token().type_name()
@@ -83,6 +92,8 @@ namespace sql::parser::detail {
   }
 
   const sql::lexer::Token& token_reader__::token() const {
+    CHECK(!empty()) << "fatal: reader is empty";
+
     return _tokens.at(_index);
   }
 

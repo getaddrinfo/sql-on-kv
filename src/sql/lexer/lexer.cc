@@ -20,6 +20,7 @@ namespace sql::lexer {
     while (!tokeniser.finished()) {
       sql::lexer::Token token = tokeniser.consume();
 
+      // TODO: VLOG
       LOG(INFO) 
         << token.type_name()
         << '('

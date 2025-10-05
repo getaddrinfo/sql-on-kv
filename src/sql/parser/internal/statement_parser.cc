@@ -19,11 +19,8 @@ namespace sql::parser::detail::statement::parser {
     
     detail::trim_left(reader);
 
-    // We are reading in the fields for `select`.
     do {
-      // Move to the next non-space token
-
-      // We must have a string (ignoring the fact that
+      // We must have an ident (ignoring the fact that
       // functions can be used in these places)
       reader.must(Type::Ident);
 
@@ -33,6 +30,8 @@ namespace sql::parser::detail::statement::parser {
       
       reader.next();
       
+      // Skip a comma so that we can check if there is another ident
+      // token to treat as a field.
       if (reader.is(Type::Comma)) {
         reader.next();
       }
@@ -40,14 +39,17 @@ namespace sql::parser::detail::statement::parser {
       detail::trim_left(reader);
     } while (!reader.is(Type::From) && !reader.is(Type::End));
 
+    // TODO: Move to VLOG
     for(const std::string& field : fields) {
       LOG(INFO) << "- " << field;
     }
 
+    // Next part must be a `FROM` statement.
     reader.must(Type::From);
     reader.next();
     detail::trim_left(reader);
 
+    // Next part must be a table name.
     reader.must(Type::Ident);
     std::string table(
       reader.token().literal()
@@ -58,23 +60,27 @@ namespace sql::parser::detail::statement::parser {
 
     LOG(INFO) << "Table: " << table;
 
+    // TODO: After this, most statements can vary in order, so we should instead use a
+    // dispatcher map that parses on the token type.
     parse_where(reader);
 
+    // TODO: Build the statement from the partial state produced by the parsers.
     return sql::parser::statement::select{};
   }
 
   std::unique_ptr<sql::parser::statement::where> _do_parse_comparison(
     token_reader__& reader
   ) {
+    // Must consist of IDENT COMPARISON VALUE
     reader.must(Type::Ident);
 
-    std::string field(
-      reader.token().literal()
-    );
+    std::string field(reader.token().literal());
 
     reader.next();
     detail::trim_left(reader);
 
+    // Either we are doing a comparison, or we are checking for
+    // presence.
     reader.must_one_of({
       Type::Equals,
       Type::In
@@ -85,7 +91,7 @@ namespace sql::parser::detail::statement::parser {
     reader.next();
     detail::trim_left(reader);
 
-    // Must be a string or an integer.
+    // Must be a string, an integer, or an identity.
     reader.must_one_of({
       Type::String,
       Type::Integer,
@@ -94,12 +100,8 @@ namespace sql::parser::detail::statement::parser {
 
     // TODO: Switch on the type to handle this differently
     // For now, assume it's a string.
-
-    std::string value(
-      reader.token().literal()
-    );
+    std::string value(reader.token().literal());
   
-
     return std::make_unique<sql::parser::statement::comparison>(
       field,
       sql::parser::statement::Operator::Equals,
@@ -107,6 +109,10 @@ namespace sql::parser::detail::statement::parser {
     );
   }
 
+  /**
+   * The set of operations that count as junctions of
+   * two other statements (AND, OR).
+   */
   static std::unordered_set<Type> _junction_ops = {
     Type::And,
     Type::Or
@@ -116,6 +122,7 @@ namespace sql::parser::detail::statement::parser {
     token_reader__& reader,
     size_t depth
   ) {
+    // TODO: Clean this up so that we know precedence of the parts.
     std::vector<std::unique_ptr<sql::parser::statement::where>> parts;
 
     do {

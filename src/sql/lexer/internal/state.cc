@@ -45,19 +45,16 @@ namespace sql::lexer::detail {
       return yield(_yieldables.at(curr));
     }
 
-    // Must be a branch
     if (is_quote(curr)) {
       detail::string_consumer__ consumer(*this);
       return consumer.consume();
     }
 
-    // Must be a branch
     if (is_integer(curr)) {
       detail::int_consumer__ consumer(*this);
       return consumer.consume();
     }
 
-    // Must be a branch
     if (is_ident(curr)) {
       detail::ident_consumer__ consumer(*this);
       return consumer.consume();
