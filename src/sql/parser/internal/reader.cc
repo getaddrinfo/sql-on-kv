@@ -3,18 +3,19 @@
 #include <strstream>
 
 #include "absl/log/check.h"
+#include <iterator>
 
 namespace sql::parser::detail {
   bool token_reader__::empty() const {
     return _index + 1 == _tokens.size();
   }
 
-  bool token_reader__::is(sql::lexer::TokenType ty) {
-    return token().ty == ty;
+  bool token_reader__::is(sql::lexer::Type ty) {
+    return token().type() == ty;
   }
 
-  bool token_reader__::is_one_of(std::initializer_list<sql::lexer::TokenType> tys) {
-    for(const sql::lexer::TokenType ty : tys) {
+  bool token_reader__::is_one_of(std::initializer_list<sql::lexer::Type> tys) {
+    for(const sql::lexer::Type ty : tys) {
       if (is(ty)) {
         return true;
       }
@@ -39,20 +40,20 @@ namespace sql::parser::detail {
     _index--;
   }
 
-  void token_reader__::must(sql::lexer::TokenType ty) {
+  void token_reader__::must(sql::lexer::Type ty) {
     CHECK(is(ty)) << "Token must be of type "
-      << sql::lexer::token_type_name(ty) 
+      << sql::lexer::Token::type_name(ty) 
       << " but is of type "
-      << sql::lexer::token_type_name(token().ty)
+      << token().type_name()
       << '('
-      << token().literal
+      << token().literal()
       << ')';
   }
 
   void token_reader__::must_one_of(
-    std::initializer_list<sql::lexer::TokenType> tys
+    std::initializer_list<sql::lexer::Type> tys
   ) {
-    for(const sql::lexer::TokenType ty : tys) {
+    for(const sql::lexer::Type ty : tys) {
       if (is(ty)) {
         return;
       }
@@ -63,7 +64,7 @@ namespace sql::parser::detail {
 
     for(auto it = tys.begin(); it != tys.end(); ++it) {
       stream << '"';
-      stream << sql::lexer::token_type_name(*it);
+      stream << sql::lexer::Token::type_name(*it);
       stream << '"';
 
       if (std::next(it) != tys.end()) {
@@ -77,7 +78,7 @@ namespace sql::parser::detail {
       << stream.str()
       << " but got " << token().type_name()
       << '('
-      << token().literal
+      << token().literal()
       << ')';
   }
 
@@ -93,7 +94,7 @@ namespace sql::parser::detail {
     while (!reader.empty()) {
       const sql::lexer::Token& token = reader.token();
 
-      if (token.ty != sql::lexer::TokenType::Space) {
+      if (token.type() != sql::lexer::Type::Space) {
         break;
       }
 

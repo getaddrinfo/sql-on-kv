@@ -9,12 +9,12 @@
 
 namespace sql::parser::detail::statement::parser {
   using lexer::Token;
-  using lexer::TokenType;
+  using lexer::Type;
 
   sql::parser::statement::select parse_select(detail::token_reader__& reader) {
     std::vector<std::string> fields;
 
-    reader.must(TokenType::Select);
+    reader.must(Type::Select);
     reader.next();
     
     detail::trim_left(reader);
@@ -25,32 +25,32 @@ namespace sql::parser::detail::statement::parser {
 
       // We must have a string (ignoring the fact that
       // functions can be used in these places)
-      reader.must(TokenType::Ident);
+      reader.must(Type::Ident);
 
       // Consume the token, and add the fields to the strings
       const sql::lexer::Token& str = reader.token();
-      fields.push_back(std::string(str.literal));
+      fields.push_back(std::string(str.literal()));
       
       reader.next();
       
-      if (reader.is(TokenType::Comma)) {
+      if (reader.is(Type::Comma)) {
         reader.next();
       }
 
       detail::trim_left(reader);
-    } while (!reader.is(TokenType::From) && !reader.is(TokenType::End));
+    } while (!reader.is(Type::From) && !reader.is(Type::End));
 
     for(const std::string& field : fields) {
       LOG(INFO) << "- " << field;
     }
 
-    reader.must(TokenType::From);
+    reader.must(Type::From);
     reader.next();
     detail::trim_left(reader);
 
-    reader.must(TokenType::Ident);
+    reader.must(Type::Ident);
     std::string table(
-      reader.token().literal
+      reader.token().literal()
     );
 
     reader.next();
@@ -66,37 +66,37 @@ namespace sql::parser::detail::statement::parser {
   std::unique_ptr<sql::parser::statement::where> _do_parse_comparison(
     token_reader__& reader
   ) {
-    reader.must(TokenType::Ident);
+    reader.must(Type::Ident);
 
     std::string field(
-      reader.token().literal
+      reader.token().literal()
     );
 
     reader.next();
     detail::trim_left(reader);
 
     reader.must_one_of({
-      TokenType::Equals,
-      TokenType::In
+      Type::Equals,
+      Type::In
     });
 
-    TokenType cmp = reader.token().ty;
+    Type cmp = reader.token().type();
 
     reader.next();
     detail::trim_left(reader);
 
     // Must be a string or an integer.
     reader.must_one_of({
-      TokenType::String,
-      TokenType::Integer,
-      TokenType::Ident
+      Type::String,
+      Type::Integer,
+      Type::Ident
     });
 
     // TODO: Switch on the type to handle this differently
     // For now, assume it's a string.
 
     std::string value(
-      reader.token().literal
+      reader.token().literal()
     );
   
 
@@ -107,9 +107,9 @@ namespace sql::parser::detail::statement::parser {
     );
   }
 
-  static std::unordered_set<TokenType> _junction_ops = {
-    TokenType::And,
-    TokenType::Or
+  static std::unordered_set<Type> _junction_ops = {
+    Type::And,
+    Type::Or
   };
 
   std::unique_ptr<sql::parser::statement::where> _do_parse_group(
@@ -119,7 +119,7 @@ namespace sql::parser::detail::statement::parser {
     std::vector<std::unique_ptr<sql::parser::statement::where>> parts;
 
     do {
-      if (reader.is(TokenType::RightParen)) {
+      if (reader.is(Type::RightParen)) {
         reader.next();
 
         // Parse this inner group
@@ -140,23 +140,23 @@ namespace sql::parser::detail::statement::parser {
       // - RightParen: Opening of a new group
       // - End: End of the input.
       reader.must_one_of({
-        TokenType::And,
-        TokenType::Or,
-        TokenType::LeftParen,
-        TokenType::RightParen,
-        TokenType::End
+        Type::And,
+        Type::Or,
+        Type::LeftParen,
+        Type::RightParen,
+        Type::End
       });
 
-      if (reader.is(TokenType::End)) {
+      if (reader.is(Type::End)) {
         break;
       }
 
       // TODO: Consume the tokens and group them properly
-      if (_junction_ops.contains(reader.token().ty)) {
+      if (_junction_ops.contains(reader.token().type())) {
         reader.next();
         detail::trim_left(reader);
       }
-    } while (!reader.is(TokenType::LeftParen));
+    } while (!reader.is(Type::LeftParen));
 
     reader.next();
     detail::trim_left(reader);
@@ -197,11 +197,11 @@ namespace sql::parser::detail::statement::parser {
 
 
     // We must be in a WHERE clause if we are in this method.
-    reader.must(TokenType::Where);
+    reader.must(Type::Where);
     reader.next();
     detail::trim_left(reader);
 
-    if (reader.is(TokenType::RightParen)) {
+    if (reader.is(Type::RightParen)) {
       reader.next();
     }
 
@@ -215,8 +215,8 @@ namespace sql::parser::detail::statement::parser {
       reader.next();
       detail::trim_left(reader);
     } while (reader.is_one_of({
-      TokenType::And,
-      TokenType::Or
+      Type::And,
+      Type::Or
     }));
 
     return sql::parser::statement::where{};

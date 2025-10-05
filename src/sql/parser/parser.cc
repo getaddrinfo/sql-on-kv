@@ -17,8 +17,8 @@ namespace sql::parser {
     ParseResult (detail::token_reader__&)
   >;
 
-  static std::unordered_map<sql::lexer::TokenType, ParserFn> _dispatcher = {
-    {sql::lexer::TokenType::Select, [](detail::token_reader__& reader) {
+  static std::unordered_map<sql::lexer::Type, ParserFn> _dispatcher = {
+    {sql::lexer::Type::Select, [](detail::token_reader__& reader) {
       return ParseResult(detail::statement::parser::parse_select(reader));
     }},
   };
@@ -45,7 +45,7 @@ namespace sql::parser {
 
     reader.back();
 
-    ParserFn& parser = _dispatcher.at(token.ty);
+    ParserFn& parser = _dispatcher.at(token.type());
     return parser(reader);
   }
 }

@@ -24,14 +24,14 @@ namespace sql::parser::detail {
       
       void back();
 
-      void must(sql::lexer::TokenType ty);
+      void must(sql::lexer::Type ty);
       void must_one_of(
-        std::initializer_list<sql::lexer::TokenType> tys
+        std::initializer_list<sql::lexer::Type> tys
       );
       
-      bool is(sql::lexer::TokenType ty);
+      bool is(sql::lexer::Type ty);
       bool is_one_of(
-        std::initializer_list<sql::lexer::TokenType> tys
+        std::initializer_list<sql::lexer::Type> tys
       );
     };    
     
