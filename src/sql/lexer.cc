@@ -57,6 +57,8 @@ namespace sql::lexer {
 
   static std::unordered_map<const std::string, TokenType, string_view_hash, string_view_eq> _keywords = {
     {"AND", TokenType::And},
+    {"OR", TokenType::Or},
+    {"IN", TokenType::In},
     {"INSERT", TokenType::Insert},
     {"INTO", TokenType::Into},
     {"SELECT", TokenType::Select},
@@ -72,7 +74,7 @@ namespace sql::lexer {
     {"TABLE", TokenType::Table}
   };
 
-  const std::string Token::type_name() {
+  const std::string& token_type_name(const TokenType ty) {
     static std::unordered_map<TokenType, const std::string> map = {
       {TokenType::Error, "Error"},
       {TokenType::Asterisk, "Asterisk"},
@@ -88,6 +90,7 @@ namespace sql::lexer {
       {TokenType::Integer, "Integer"},
       {TokenType::String, "String"},
       {TokenType::And, "And"},
+      {TokenType::Or, "Or"},
       {TokenType::Insert, "Insert"},
       {TokenType::Into, "Into"},
       {TokenType::Select, "Select"},
@@ -103,12 +106,17 @@ namespace sql::lexer {
       {TokenType::Table, "Table"},
       {TokenType::Semicolon, "Semicolon"},
       {TokenType::End, "End"},
+      {TokenType::In, "In"}
     };
 
     auto result = map.find(ty);
     CHECK(result != map.end()) << "Unknown token type: " << static_cast<int>(ty);
 
     return result->second;
+  }
+
+  const std::string& Token::type_name() const {
+    return token_type_name(ty);
   }
 
   namespace detail {    
@@ -176,6 +184,22 @@ namespace sql::lexer {
         next();
         return token;
       }
+      
+      if (is_equals(curr)) {
+        Token token {
+          .ty = TokenType::Equals,
+          .literal = std::nullopt
+        };
+        
+        next();
+        return token;
+      }
+
+      // Must be a branch
+      if (is_quote(curr)) {
+        detail::string_consumer__ consumer(*this);
+        return consumer.consume();
+      }
 
       // Must be a branch
       if (is_integer(curr)) {
@@ -184,19 +208,19 @@ namespace sql::lexer {
       }
 
       // Must be a branch
-      if (is_string(curr)) {
-        detail::string_consumer__ consumer(*this);
+      if (is_ident(curr)) {
+        detail::ident_consumer__ consumer(*this);
         return consumer.consume();
       }
 
       CHECK(false) << absl::StrFormat(
-        "unreachable: input %c reached this point",
+        "unreachable: input \"%c\" unmatched",
         curr
       );
     }
 
     bool consumption_state__::next() {
-      if (_curr_index == _data.size()) {
+      if (_curr_index + 1 == _data.size()) {
         return false;
       }
       
@@ -213,6 +237,12 @@ namespace sql::lexer {
     }
 
     const char consumption_state__::current() const {
+      CHECK(_curr_index < _data.size()) << "Out of bounds read: idx " 
+        << _curr_index
+        << " of "
+        << _data.size()
+        << " elements.";
+
       return _data.at(_curr_index);
     }
 
@@ -221,7 +251,7 @@ namespace sql::lexer {
     }
     
     const bool consumption_state__::finished() const {
-      return _curr_index == _data.size();
+      return _curr_index + 1 == _data.size();
     }
 
 
@@ -229,14 +259,14 @@ namespace sql::lexer {
       return _data;
     }
 
-    Token string_consumer__::consume() {
+    Token ident_consumer__::consume() {
       size_t offset = _parent.index();
       size_t size = 0;
 
       do {
         char c = _parent.current();
 
-        if (!is_string(c)) {
+        if (!is_ident(c)) {
           break;
         }
         
@@ -256,6 +286,37 @@ namespace sql::lexer {
             .literal = current_word
           };
         }
+      } while (_parent.next());
+
+      return Token{
+        .ty = TokenType::Ident,
+        .literal = _parent.data().substr(
+          offset,
+          size
+        )
+      };
+    }
+
+    Token string_consumer__::consume() {
+      size_t offset = _parent.index();
+      size_t size = 0;
+
+      char prev;
+
+      do {
+        char c = _parent.current();
+
+        if (is_quote(c)) {
+          // Escaping
+          if (size > 0 && prev == '\\') {
+            continue;
+          } 
+
+          break;
+        }
+
+        size++;
+        prev = c;
       } while (_parent.next());
 
       return Token{
@@ -294,11 +355,11 @@ namespace sql::lexer {
       return c == '*';
     }
 
-    bool is_string(char c) {
-      if (c == '"') {
-        return true;
-      }
+    bool is_quote(char c) {
+      return c == '"';
+    }
 
+    bool is_ident(char c) {
       if (c >= 'a' && c <= 'z') {
         return true;
       }
@@ -307,7 +368,15 @@ namespace sql::lexer {
         return true;
       }
 
+      if (c == '_') {
+        return true;
+      }
+
       return false;
+    }
+
+    bool is_equals(char c) {
+      return c == '=';
     }
 
     bool is_comma(char c) {

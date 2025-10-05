@@ -21,7 +21,9 @@ namespace sql::lexer {
     Integer,
     String,
     And,
+    Or,
     Insert,
+    In,
     Into,
     Select,
     Delete,
@@ -38,11 +40,13 @@ namespace sql::lexer {
     End
   };
 
+  const std::string& token_type_name(const TokenType ty);
+
   struct Token {
     TokenType ty;
     std::optional<const std::string_view> literal;
 
-    const std::string type_name();
+    const std::string& type_name() const;
   };
 
 
@@ -51,7 +55,7 @@ namespace sql::lexer {
   std::vector<Token> lex(const std::string& source);
 
   namespace detail {
-    bool is_string(char);
+    bool is_quote(char);
     bool is_integer(char);
     bool is_space(char);
     bool is_open_bracket(char);
@@ -59,6 +63,8 @@ namespace sql::lexer {
     bool is_semicolon(char);
     bool is_asterisk(char);
     bool is_comma(char);
+    bool is_equals(char);
+    bool is_ident(char);
 
     class consumption_state__ {
     private:
@@ -77,6 +83,18 @@ namespace sql::lexer {
       const size_t index() const;
       const std::string_view data() const;
       const bool finished() const;
+    };
+
+    class ident_consumer__ {
+    private:
+      consumption_state__& _parent;
+    
+    public:
+      ident_consumer__(
+        consumption_state__& parent
+      ) : _parent(parent) {}
+
+      Token consume();
     };
 
     class string_consumer__ {
