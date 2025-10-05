@@ -1,0 +1,224 @@
+#include "statement_parser.hh"
+#include "reader.hh"
+#include "statement.hh"
+
+#include "absl/log/check.h"
+#include "absl/log/log.h"
+
+#include <unordered_set>
+
+namespace sql::parser::detail::statement::parser {
+  using lexer::Token;
+  using lexer::TokenType;
+
+  sql::parser::statement::select parse_select(detail::token_reader__& reader) {
+    std::vector<std::string> fields;
+
+    reader.must(TokenType::Select);
+    reader.next();
+    
+    detail::trim_left(reader);
+
+    // We are reading in the fields for `select`.
+    do {
+      // Move to the next non-space token
+
+      // We must have a string (ignoring the fact that
+      // functions can be used in these places)
+      reader.must(TokenType::Ident);
+
+      // Consume the token, and add the fields to the strings
+      const sql::lexer::Token& str = reader.token();
+      fields.push_back(std::string(str.literal));
+      
+      reader.next();
+      
+      if (reader.is(TokenType::Comma)) {
+        reader.next();
+      }
+
+      detail::trim_left(reader);
+    } while (!reader.is(TokenType::From) && !reader.is(TokenType::End));
+
+    for(const std::string& field : fields) {
+      LOG(INFO) << "- " << field;
+    }
+
+    reader.must(TokenType::From);
+    reader.next();
+    detail::trim_left(reader);
+
+    reader.must(TokenType::Ident);
+    std::string table(
+      reader.token().literal
+    );
+
+    reader.next();
+    detail::trim_left(reader);
+
+    LOG(INFO) << "Table: " << table;
+
+    parse_where(reader);
+
+    return sql::parser::statement::select{};
+  }
+
+  std::unique_ptr<sql::parser::statement::where> _do_parse_comparison(
+    token_reader__& reader
+  ) {
+    reader.must(TokenType::Ident);
+
+    std::string field(
+      reader.token().literal
+    );
+
+    reader.next();
+    detail::trim_left(reader);
+
+    reader.must_one_of({
+      TokenType::Equals,
+      TokenType::In
+    });
+
+    TokenType cmp = reader.token().ty;
+
+    reader.next();
+    detail::trim_left(reader);
+
+    // Must be a string or an integer.
+    reader.must_one_of({
+      TokenType::String,
+      TokenType::Integer,
+      TokenType::Ident
+    });
+
+    // TODO: Switch on the type to handle this differently
+    // For now, assume it's a string.
+
+    std::string value(
+      reader.token().literal
+    );
+  
+
+    return std::make_unique<sql::parser::statement::comparison>(
+      field,
+      sql::parser::statement::Operator::Equals,
+      value
+    );
+  }
+
+  static std::unordered_set<TokenType> _junction_ops = {
+    TokenType::And,
+    TokenType::Or
+  };
+
+  std::unique_ptr<sql::parser::statement::where> _do_parse_group(
+    token_reader__& reader,
+    size_t depth
+  ) {
+    std::vector<std::unique_ptr<sql::parser::statement::where>> parts;
+
+    do {
+      if (reader.is(TokenType::RightParen)) {
+        reader.next();
+
+        // Parse this inner group
+        parts.push_back(_do_parse_group(
+          reader,
+          depth + 1
+        ));
+      } else {
+        parts.push_back(_do_parse_comparison(reader));
+      }
+
+      reader.next();
+      detail::trim_left(reader);
+
+      // Each of these are valid:
+      // - AND, OR: Continuation of current group
+      // - LeftParen: Closing of current group
+      // - RightParen: Opening of a new group
+      // - End: End of the input.
+      reader.must_one_of({
+        TokenType::And,
+        TokenType::Or,
+        TokenType::LeftParen,
+        TokenType::RightParen,
+        TokenType::End
+      });
+
+      if (reader.is(TokenType::End)) {
+        break;
+      }
+
+      // TODO: Consume the tokens and group them properly
+      if (_junction_ops.contains(reader.token().ty)) {
+        reader.next();
+        detail::trim_left(reader);
+      }
+    } while (!reader.is(TokenType::LeftParen));
+
+    reader.next();
+    detail::trim_left(reader);
+
+    return std::make_unique<sql::parser::statement::condition>();
+  }
+
+  sql::parser::statement::where parse_where(
+    token_reader__& reader
+  ) {
+    /*
+    TODO: Convert these cases into standalone tests that validate the parse tree.
+    
+    Cases:
+    WHERE field=something;
+    WHERE field=something AND another_field=something;
+    WHERE (field=something) AND (another_field=something);
+    WHERE (field=something AND another_field=something);
+    WHERE (field=something AND another_field=that) OR field=something_else;
+    WHERE ((field = something) AND another_field=that);
+    ...
+
+    And so on
+
+    We can imagine that a statement has brackets if it doesn't.
+    `WHERE field=something` -> `WHERE (field=something)`
+    `WHERE field=something AND another_field=something` -> `WHERE (field=something AND another_field=something)`
+
+    Then, any other statements can be well bracketed. We also need to consider precedence.
+
+    Hence, we need to split this parsing of a where statement into the following steps:
+    - Augmenting brackets if required (simple)
+    - Parsing statements at the bracket level (simple)
+    - Inserting brackets where required to respect precedence (AND > OR > ...)
+    - Parsing these into a class or tree that represents these conditions and can 
+      easily be parsed at the key-value layer.
+    */
+
+
+    // We must be in a WHERE clause if we are in this method.
+    reader.must(TokenType::Where);
+    reader.next();
+    detail::trim_left(reader);
+
+    if (reader.is(TokenType::RightParen)) {
+      reader.next();
+    }
+
+    // We need to stitch together each group, since it could be
+    do {
+      std::unique_ptr<sql::parser::statement::where> cond = _do_parse_group(
+        reader,
+        1
+      );
+
+      reader.next();
+      detail::trim_left(reader);
+    } while (reader.is_one_of({
+      TokenType::And,
+      TokenType::Or
+    }));
+
+    return sql::parser::statement::where{};
+  }
+}

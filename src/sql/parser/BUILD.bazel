@@ -1,7 +1,7 @@
 cc_library(
-  name = "sql",
-  srcs = glob(["*.cc"]),
-  hdrs = glob(["*.hh"]),
+  name = "parser",
+  srcs = glob(["*.cc", "internal/*.cc"]),
+  hdrs = glob(["*.hh", "internal/*.hh"]),
   includes = ["."],
   copts = ["-std=c++20"],
   strip_include_prefix = "/src",
@@ -9,5 +9,6 @@ cc_library(
   deps = [
     "@abseil-cpp//absl/log",
     "@abseil-cpp//absl/log:check",
+    "//src/sql/lexer",
   ],
 )
