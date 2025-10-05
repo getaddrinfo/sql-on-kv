@@ -306,12 +306,7 @@ namespace sql::lexer {
       do {
         char c = _parent.current();
 
-        if (is_quote(c)) {
-          // Escaping
-          if (size > 0 && prev == '\\') {
-            continue;
-          } 
-
+        if (size > 0 && is_quote(c) && prev != '\\') {
           break;
         }
 
@@ -319,11 +314,15 @@ namespace sql::lexer {
         prev = c;
       } while (_parent.next());
 
+
+
       return Token{
         .ty = TokenType::String,
+
+        // Skip the first and last quotes
         .literal = _parent.data().substr(
-          offset,
-          size
+          offset + 1,
+          size - 1
         )
       };
     }
