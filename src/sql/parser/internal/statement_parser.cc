@@ -11,6 +11,17 @@ namespace sql::parser::detail::statement::parser {
   using lexer::Token;
   using lexer::Type;
 
+
+  struct compare_precedence {
+    bool operator()(
+      std::tuple<sql::parser::statement::Operator, size_t, size_t>& a,
+      std::tuple<sql::parser::statement::Operator, size_t, size_t>& b
+    ) const {
+      return std::get<0>(a) > std::get<0>(b);
+    }
+  };
+
+
   sql::parser::statement::select parse_select(detail::token_reader__& reader) {
     std::vector<std::string> fields;
 
@@ -131,51 +142,93 @@ namespace sql::parser::detail::statement::parser {
     token_reader__& reader,
     size_t depth
   ) {
-    // TODO: Clean this up so that we know precedence of the parts.
-    std::vector<std::unique_ptr<sql::parser::statement::where>> parts;
+    std::vector<std::unique_ptr<sql::parser::statement::where>> conditions;
+    std::vector<sql::parser::statement::Operator> junctions;
 
-    do {
-      if (reader.is(Type::RightParen)) {
+    // Cases:
+    // - This function has been called at the start of a group `(...`
+    // - This function has been called at the end of a group `...)
+
+    comp: switch (reader.token().type()) {
+      case Type::RightParen: {
+        LOG(INFO) << reader.highlight_current_token() << '\n';
         reader.next();
+        conditions.push_back(_do_parse_group(reader, depth+1));
 
-        // Parse this inner group
-        parts.push_back(_do_parse_group(
-          reader,
-          depth + 1
-        ));
-      } else {
-        parts.push_back(_do_parse_comparison(reader));
+        goto comp;
       }
 
-      reader.next();
-      detail::trim_left(reader);
-
-      // Each of these are valid:
-      // - AND, OR: Continuation of current group
-      // - LeftParen: Closing of current group
-      // - RightParen: Opening of a new group
-      // - End: End of the input.
-      reader.must_one_of({
-        Type::And,
-        Type::Or,
-        Type::LeftParen,
-        Type::RightParen,
-        Type::End
-      });
-
-      // TODO: Consume the tokens and group them properly
-      if (_junction_mapping.contains(reader.token().type())) {
+      case Type::Ident: {
+        LOG(INFO) << reader.highlight_current_token();
+        conditions.push_back(_do_parse_comparison(reader));
         reader.next();
+
+        goto comp;
+      }
+
+      case Type::Space: {
         detail::trim_left(reader);
 
-        LOG(INFO) << "Junction in _do_parse_group";
+        goto comp;
       }
-    } while (!reader.is_one_of({ Type::LeftParen, Type::End }));
+
+      case Type::And:
+      case Type::Or: {
+        LOG(INFO) << reader.highlight_current_token() << '\n';
+        CHECK(_junction_mapping.contains(reader.token().type()))
+          << "Cannot lookup expected token in WHERE clause in junction map";
+        junctions.push_back(
+          _junction_mapping.at(reader.token().type())
+        );
+
+        reader.next();
+        goto comp;
+      }
+
+      case Type::End: {
+        LOG(INFO) << reader.token().type_name();
+        break;
+      }
+
+      case Type::LeftParen: {
+        LOG(INFO) << reader.highlight_current_token() << '\n';
+        break;
+      }
+
+      default: {
+        break;
+      }
+    }
 
     reader.next();
     detail::trim_left(reader);
 
-    LOG(INFO) << "Parsed group of size " << parts.size();
+    CHECK_EQ(junctions.size(), conditions.size() - 1)
+      << "Mismatch in junctions and conditions";
+
+    LOG(INFO) << absl::StrFormat("junctions:%d conditions:%d", junctions.size(), conditions.size());
+
+    // We now need to zip for precedence
+    std::vector<std::tuple<sql::parser::statement::Operator, size_t, size_t>> 
+      precedence(junctions.size());
+
+    // Zip the `operator` and the two conditions grouped by the junction as a tuple of 3 elements.
+    for(size_t i = 0; i < junctions.size(); i++) {
+      precedence.at(i) = std::make_tuple(junctions.at(i), i, i + 1);
+    }
+
+    // Sort using a precedence sorter built for the pair.
+    std::sort(precedence.begin(), precedence.end(), compare_precedence{});
+
+    for(auto& p : precedence) {
+      LOG(INFO) << "- "
+        << sql::parser::statement::operator_name(std::get<0>(p))
+        << '('
+        << std::get<1>(p)
+        << ','
+        << std::get<2>(p)
+        << ')';
+    }
 
     return std::make_unique<sql::parser::statement::condition>();
   }
@@ -204,39 +257,18 @@ namespace sql::parser::detail::statement::parser {
     Then, any other statements can be well bracketed. We also need to consider precedence.
 
     Hence, we need to split this parsing of a where statement into the following steps:
-    - Augmenting brackets if required (simple)
     - Parsing statements at the bracket level (simple)
     - Inserting brackets where required to respect precedence (AND > OR > ...)
     - Parsing these into a class or tree that represents these conditions and can 
       easily be parsed at the key-value layer.
     */
 
-
     // We must be in a WHERE clause if we are in this method.
     reader.must(Type::Where);
     reader.next();
     detail::trim_left(reader);
 
-    if (reader.is(Type::RightParen)) {
-      reader.next();
-    }
-
-    std::optional<sql::parser::statement::Operator> prev;
-
-    // We need to stitch together each group, since it could be
-    do {
-      std::unique_ptr<sql::parser::statement::where> cond = _do_parse_group(
-        reader,
-        1
-      );
-
-      if (reader.is_one_of({ Type::And, Type::Or })) {
-        LOG(INFO) << "Junction in parse_where";
-      }
-    } while (reader.is_one_of({
-      Type::And,
-      Type::Or
-    }));
+    _do_parse_group(reader, 0);
 
     return sql::parser::statement::where{};
   }
