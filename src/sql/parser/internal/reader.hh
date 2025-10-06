@@ -2,10 +2,22 @@
 #define _SQL_PARSER_INTERNAL_READER_HH
 
 #include <vector>
+#include <sstream>
 
 #include "sql/lexer/lexer.hh"
 
+#include "absl/strings/str_format.h"
+
 namespace sql::parser::detail {
+  static void both(
+    std::ostringstream& a,
+    std::ostringstream& b,
+    const std::string input
+  ) {
+    a << input;
+    b << input;
+  }
+
   /**
    * Represents a reader of `Token`s that tracks current position
    * and safeguards against out of bounds reads.
@@ -90,6 +102,43 @@ namespace sql::parser::detail {
       bool is_one_of(
         std::initializer_list<sql::lexer::Type> tys
       );
+
+      const std::string highlight_current_token() {
+        std::ostringstream token_stream;
+        std::ostringstream literal_stream;
+
+        constexpr const std::string reset = "\033[0m";
+        constexpr const std::string green = "\033[0;32m";
+
+        for(size_t i = 0; i < _tokens.size(); i++) {
+          const sql::lexer::Token& token = _tokens.at(i);
+          if (i == _index) {
+            both(token_stream, literal_stream, green);
+      
+            token_stream << token.type_name();
+            literal_stream << token.literal();
+
+            both(token_stream, literal_stream, reset);
+
+            token_stream << ' ';
+
+            continue;
+          }
+
+          token_stream << _tokens.at(i).type_name();
+          if (token.type() != sql::lexer::Type::End) {
+            literal_stream << _tokens.at(i).literal();
+          }
+
+          token_stream << ' ';
+        }
+
+        return absl::StrFormat(
+          "Tokens: %s\nLiteral: %s",
+          token_stream.str(),
+          literal_stream.str()
+        );
+      }
     };    
     
     /**

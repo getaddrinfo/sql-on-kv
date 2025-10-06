@@ -46,10 +46,10 @@ namespace sql::parser::detail {
     CHECK(is(ty)) << "Token must be of type "
       << sql::lexer::Token::type_name(ty) 
       << " but is of type "
-      << token().type_name()
-      << '('
-      << token().literal()
-      << ')';
+      << token().repr()
+      << '\n'
+      << "Tokens as follows: "
+      << highlight_current_token();
   }
 
   void token_reader__::must_one_of(
@@ -85,15 +85,14 @@ namespace sql::parser::detail {
     // Follows from `is_one_of(tys)` not resulting in an early bail.
     CHECK(false) << "Expected token to be one of "
       << stream.str()
-      << " but got " << token().type_name()
-      << '('
-      << token().literal()
-      << ')';
+      << " but got " 
+      << token().repr()
+      << '\n'
+      << "Tokens as follows:"
+      << highlight_current_token();
   }
 
   const sql::lexer::Token& token_reader__::token() const {
-    CHECK(!empty()) << "fatal: reader is empty";
-
     return _tokens.at(_index);
   }
 
