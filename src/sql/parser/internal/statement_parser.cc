@@ -37,7 +37,7 @@ namespace sql::parser::detail::statement::parser {
       }
 
       detail::trim_left(reader);
-    } while (!reader.is(Type::From) && !reader.is(Type::End));
+    } while (!reader.is_one_of({Type::From, Type::End}));
 
     // TODO: Move to VLOG
     for(const std::string& field : fields) {
@@ -73,6 +73,14 @@ namespace sql::parser::detail::statement::parser {
     sql::parser::statement::Operator
   > _operator_mapping = {
     {sql::lexer::Type::Equals, sql::parser::statement::Operator::Equals},
+  };
+
+  static std::unordered_map<
+    sql::lexer::Type,
+    sql::parser::statement::Operator
+  > _junction_mapping = {
+    {sql::lexer::Type::And, sql::parser::statement::Operator::And},
+    {sql::lexer::Type::Or, sql::parser::statement::Operator::Or}
   };
 
   std::unique_ptr<sql::parser::statement::where> _do_parse_comparison(
@@ -119,15 +127,6 @@ namespace sql::parser::detail::statement::parser {
     );
   }
 
-  /**
-   * The set of operations that count as junctions of
-   * two other statements (AND, OR).
-   */
-  static std::unordered_set<Type> _junction_ops = {
-    Type::And,
-    Type::Or
-  };
-
   std::unique_ptr<sql::parser::statement::where> _do_parse_group(
     token_reader__& reader,
     size_t depth
@@ -164,19 +163,19 @@ namespace sql::parser::detail::statement::parser {
         Type::End
       });
 
-      if (reader.is(Type::End)) {
-        break;
-      }
-
       // TODO: Consume the tokens and group them properly
-      if (_junction_ops.contains(reader.token().type())) {
+      if (_junction_mapping.contains(reader.token().type())) {
         reader.next();
         detail::trim_left(reader);
+
+        LOG(INFO) << "Junction in _do_parse_group";
       }
-    } while (!reader.is(Type::LeftParen));
+    } while (!reader.is_one_of({ Type::LeftParen, Type::End }));
 
     reader.next();
     detail::trim_left(reader);
+
+    LOG(INFO) << "Parsed group of size " << parts.size();
 
     return std::make_unique<sql::parser::statement::condition>();
   }
@@ -222,6 +221,8 @@ namespace sql::parser::detail::statement::parser {
       reader.next();
     }
 
+    std::optional<sql::parser::statement::Operator> prev;
+
     // We need to stitch together each group, since it could be
     do {
       std::unique_ptr<sql::parser::statement::where> cond = _do_parse_group(
@@ -229,8 +230,9 @@ namespace sql::parser::detail::statement::parser {
         1
       );
 
-      reader.next();
-      detail::trim_left(reader);
+      if (reader.is_one_of({ Type::And, Type::Or })) {
+        LOG(INFO) << "Junction in parse_where";
+      }
     } while (reader.is_one_of({
       Type::And,
       Type::Or

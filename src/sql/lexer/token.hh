@@ -69,6 +69,11 @@ namespace sql::lexer {
     const std::string_view literal() const;
 
     /**
+     * Gets a string representation of the token.
+     */
+    const std::string repr() const;
+
+    /**
      * Gets a string representation of the name of this token.
      */
     const std::string& type_name() const;

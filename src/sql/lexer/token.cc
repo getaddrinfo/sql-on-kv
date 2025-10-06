@@ -3,6 +3,7 @@
 #include <unordered_map>
 
 #include "absl/log/check.h"
+#include "absl/strings/str_format.h"
 
 namespace sql::lexer {
   const std::string& Token::type_name(const Type ty) {
@@ -48,6 +49,14 @@ namespace sql::lexer {
 
   const std::string& Token::type_name() const {
     return Token::type_name(type());
+  }
+
+  const std::string Token::repr() const {
+    return absl::StrFormat(
+      "%s(%s)",
+      type_name(),
+      literal()
+    );
   }
 
   const Type Token::type() const {
