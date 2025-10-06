@@ -68,6 +68,13 @@ namespace sql::parser::detail::statement::parser {
     return sql::parser::statement::select{};
   }
 
+  static std::unordered_map<
+    sql::lexer::Type,
+    sql::parser::statement::Operator
+  > _operator_mapping = {
+    {sql::lexer::Type::Equals, sql::parser::statement::Operator::Equals},
+  };
+
   std::unique_ptr<sql::parser::statement::where> _do_parse_comparison(
     token_reader__& reader
   ) {
@@ -87,6 +94,9 @@ namespace sql::parser::detail::statement::parser {
     });
 
     Type cmp = reader.token().type();
+    CHECK(_operator_mapping.contains(cmp)) << "Invalid";
+
+    sql::parser::statement::Operator op = _operator_mapping.at(cmp);
 
     reader.next();
     detail::trim_left(reader);
@@ -104,7 +114,7 @@ namespace sql::parser::detail::statement::parser {
   
     return std::make_unique<sql::parser::statement::comparison>(
       field,
-      sql::parser::statement::Operator::Equals,
+      op,
       value
     );
   }
