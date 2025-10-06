@@ -7,6 +7,8 @@
 
 #include "type.hh"
 
+#include "absl/log/check.h"
+
 /**
  * Holds all the classes and types relevant to statements and
  * their structure.
@@ -37,6 +39,8 @@ namespace sql::parser::statement {
      */
     Or
   };
+
+  const std::string& operator_name(const Operator op);
   
   /**
    * A base class to hold `condition` and `comparison` in a tree
