@@ -3,6 +3,7 @@
 
 #include <variant>
 #include <string>
+#include <inttypes.h>
 
 namespace repl {
   struct Success {

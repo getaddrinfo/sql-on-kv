@@ -107,8 +107,8 @@ namespace sql::parser::detail {
         std::ostringstream token_stream;
         std::ostringstream literal_stream;
 
-        constexpr const std::string reset = "\033[0m";
-        constexpr const std::string green = "\033[0;32m";
+        const std::string reset = "\033[0m";
+        const std::string green = "\033[0;32m";
 
         for(size_t i = 0; i < _tokens.size(); i++) {
           const sql::lexer::Token& token = _tokens.at(i);

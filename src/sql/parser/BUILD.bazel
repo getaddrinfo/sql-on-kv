@@ -1,7 +1,7 @@
 cc_library(
   name = "parser",
-  srcs = glob(["*.cc", "internal/*.cc"]),
-  hdrs = glob(["*.hh", "internal/*.hh"]),
+  srcs = glob(["*.cc", "internal/*.cc", "internal/where/*.cc"]),
+  hdrs = glob(["*.hh", "internal/*.hh", "internal/where/*.hh"]),
   includes = ["."],
   copts = ["-std=c++20"],
   strip_include_prefix = "/src",

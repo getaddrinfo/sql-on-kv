@@ -3,6 +3,7 @@
 
 #include <stdlib.h>
 
+#include <memory>
 #include <vector>
 
 #include "result.hh"
