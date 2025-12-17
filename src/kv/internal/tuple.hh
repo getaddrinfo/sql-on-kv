@@ -3,8 +3,10 @@
 
 #include <vector>
 #include <string>
+#include <span>
 
 #include <inttypes.h>
+
 
 namespace kv::detail::tuple {
   constexpr uint8_t null_value = 0x00;
@@ -81,11 +83,11 @@ namespace kv::detail::tuple {
       : IntegerIdentifier<T>::pos;
   }
 
-  template <typename T>
   class packer {
     std::vector<uint8_t> _state;
 
     void _push(uint8_t);
+    void _push(std::span<uint8_t>);
 
   public:
     void push_null();
@@ -93,10 +95,22 @@ namespace kv::detail::tuple {
       typename T,
       typename std::enable_if<std::is_integral_v<T>>::type = 0
     >
+    // TODO: Endianness
     void push(T value) {
       _push(tag<T>(value));
 
-      // TODO: Add the value
+      if (value < 0) {
+        value = value ^ (~(T)0);
+      }
+
+      std::span<uint8_t, sizeof(T)> bytes{
+        reinterpret_cast<uint8_t*>(&value),
+        sizeof(value)
+      };
+
+      for(const uint8_t byte : bytes) {
+        _push(byte);
+      }
     }
 
     void push_id(uint64_t);
@@ -107,15 +121,14 @@ namespace kv::detail::tuple {
     void push(bool);
 
     void push_uuid(std::string_view);
-    void push_version_stamp(std::string_view);
-    void push_byte_string(std::string_view);
+    void push_byte_string(std::span<uint8_t>);
     void push_unicode_string(std::string_view);
-    void push_length_prefixed_byte_string(std::string_view);
     void push(const packer&);
 
     template <typename T>
-    operator<<(T value) {
+    packer& operator<<(T value) {
       push(value);
+      return *this;
     }
 
     std::vector<uint8_t> finish(); 
