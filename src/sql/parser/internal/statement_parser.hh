@@ -10,14 +10,14 @@ namespace sql::parser::detail::statement::parser {
    * 
    * @throws
    */
-  sql::parser::statement::select parse_select(detail::token_reader__& reader);
+  sql::parser::statement::Select parse_select(detail::TokenReader& reader);
 
   /**
    * Parses a `WHERE` clause from ` token reader.
    * 
    * @throws
    */
-  sql::parser::statement::where parse_where(detail::token_reader__& reader);
+  // sql::parser::statement::Where parse_where(detail::TokenReader& reader);
 }
 
 #endif /* _SQL_PARSER_INTERNAL_STATEMENT_PARSER_HH */

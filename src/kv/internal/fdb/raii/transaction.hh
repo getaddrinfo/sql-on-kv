@@ -17,7 +17,7 @@ namespace kv::detail::fdb {
   /**
    * Represents a transaction on the given database.
    */
-  class transaction {
+  class Transaction {
   private:
     std::shared_ptr<FDBTransaction> _ptr;
 
@@ -25,7 +25,7 @@ namespace kv::detail::fdb {
     /**
      * Creates a transaction.
      */
-    transaction(std::weak_ptr<FDBDatabase> db) {
+    Transaction(std::weak_ptr<FDBDatabase> db) {
       FDBTransaction* ptr = nullptr;
       fdb_error_t err = ::fdb_database_create_transaction(
         db.lock().get(),
@@ -43,7 +43,7 @@ namespace kv::detail::fdb {
      * @param key The key to get.
      * @param in_snapshot True if this is a snapshot read.
      */
-    future get(const std::span<uint8_t> key, bool in_snapshot);
+    Future get(const std::span<uint8_t> key, bool in_snapshot);
   };
 }
 

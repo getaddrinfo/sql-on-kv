@@ -6,15 +6,15 @@
 #include "row.hh"
 
 namespace kv::detail::table::result {
-  class set {
+  class Set {
   private:
-    std::vector<row> _rows;
+    std::vector<Row> _rows;
     size_t _dimension;
   public: 
-    set(size_t dimension) : _dimension(dimension) {}
+    Set(size_t dimension) : _dimension(dimension) {}
 
-    void add(row);
-    void add(std::vector<value> values);
+    void add(Row);
+    void add(std::vector<Value> values);
   };
 }
 

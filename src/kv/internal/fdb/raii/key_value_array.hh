@@ -11,9 +11,9 @@ namespace kv::detail::fdb {
    * and maintain ownership of a reference to `Future` to ensure
    * the underlying memory is not freed.
    */
-  class key_value_array { 
+  class KeyValueArray { 
   private:
-    future _owner;
+    Future _owner;
     std::vector<key_value> _entries;
 
   public:
@@ -21,7 +21,7 @@ namespace kv::detail::fdb {
      * Constructs a `key_value_array` from a future.
      * @note Fails if the `future` doesn't hold a `keyvalue`.
      */
-    key_value_array(future source); 
+    KeyValueArray(Future source); 
 
     /**
      * The number of entries in this `key_value_array`.

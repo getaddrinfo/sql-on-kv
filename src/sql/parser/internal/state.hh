@@ -7,8 +7,8 @@ namespace sql::parser::detail {
   // This will eventually be made into a concrete statement.
   // We need to be able to incrementally update this, since we can't
   // guarantee what order certain statements come in.
-  class incomplete_parse_state__ {
-    std::optional<std::unique_ptr<sql::parser::statement::where>> _where;
+  class IncompleteParseState {
+    std::optional<std::unique_ptr<sql::parser::statement::Where>> _where;
 
   public:
     void set_where();

@@ -5,11 +5,11 @@
 
 namespace kv {
   // Destroy the database using `fdb_database_destroy`.
-  void connection::database_deleter::operator()(FDBDatabase* ptr) {
+  void Connection::database_deleter::operator()(FDBDatabase* ptr) {
     ::fdb_database_destroy(ptr);
   }
 
-  std::weak_ptr<FDBDatabase> connection::get() {
+  std::weak_ptr<FDBDatabase> Connection::get() {
     if (_db.get() == nullptr) {
       initialize();
     }
@@ -17,7 +17,7 @@ namespace kv {
     return std::weak_ptr<FDBDatabase>(_db);
   }
 
-  void connection::initialize() {
+  void Connection::initialize() {
     FDBDatabase* ptr;
     fdb_error_t err = ::fdb_create_database(_cluster_path.c_str(), &ptr);
 

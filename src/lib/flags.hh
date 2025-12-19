@@ -13,12 +13,12 @@ namespace lib {
       >
     > = 0
   >
-  class flags {
+  class Flags {
     using BitType = std::underlying_type_t<T>;
     BitType _value;
 
   public:
-    flags(BitType value) : _value(value) {}
+    Flags(BitType value) : _value(value) {}
 
     const bool has(T flag) const {
       BitType mask = static_cast<BitType>(flag);
@@ -45,7 +45,7 @@ namespace lib {
   };
 
   template <typename T>
-  class flags {
+  class Flags {
     static_assert(!std::is_same_v<T, T>, "Underlying type must be an enum with a fixed width")
   };
 }

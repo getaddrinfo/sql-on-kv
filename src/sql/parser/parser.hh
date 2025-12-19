@@ -15,12 +15,12 @@ namespace sql::parser {
    * TODO: Is this better as an inheritance heirarchy?
    */
   using ParseResult = std::variant<
-    statement::select,
-    statement::update,
-    statement::insert,
-    statement::delete_row,
-    statement::create_table,
-    statement::drop_table
+    statement::Select,
+    statement::Update,
+    statement::Insert,
+    statement::DeleteRow,
+    statement::CreateTable,
+    statement::DropTable
   >;
 
   /**

@@ -22,7 +22,7 @@ namespace sql::parser::detail {
    * Represents a reader of `Token`s that tracks current position
    * and safeguards against out of bounds reads.
    */
-  class token_reader__ {
+  class TokenReader {
     private:
       /**
        * A const reference to the tokens produced by lexing.
@@ -35,7 +35,7 @@ namespace sql::parser::detail {
       size_t _index;
 
     public:
-      token_reader__(
+      TokenReader(
         const std::vector<sql::lexer::Token>& tokens
       ) : _tokens(tokens), _index(0) {}
 
@@ -145,7 +145,7 @@ namespace sql::parser::detail {
      * Consumes spaces until the reader is at a non-space
      * token (which may be the end of the tokens).
      */
-    void trim_left(token_reader__& reader);
+    void trim_left(TokenReader& reader);
 
 }
 

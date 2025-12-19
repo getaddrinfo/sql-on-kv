@@ -7,11 +7,11 @@
 
 namespace detail {
 
-  using sql::parser::statement::where;
+  using sql::parser::statement::Where;
   using sql::parser::statement::Operator;
 
-  std::shared_ptr<where> shunt(
-    std::vector<std::shared_ptr<where>>& conditions,
+  std::shared_ptr<Where> shunt(
+    std::vector<std::shared_ptr<Where>>& conditions,
     std::vector<Operator>& operators 
   );
 }

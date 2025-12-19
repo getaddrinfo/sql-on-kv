@@ -50,21 +50,21 @@ namespace sql::parser::statement {
    * 
    * Must be `dynamic_cast`ed to `condition` or `where`.
    */
-  class where {
+  class Where {
   public:
-    virtual ~where() {}
+    virtual ~Where() {}
   };
 
   /**
    * Represents a condition that contains subconditions, or comparisons as
    * left and right children, and an operator that compares the left and right side.
    */
-  class condition : public where {
+  class Condition : public Where {
   private:
     /**
      * The left hand side of this condition.
      */
-    std::shared_ptr<where> _lhs;
+    std::shared_ptr<Where> _lhs;
 
     /**
      * The operator for this condition.
@@ -74,21 +74,21 @@ namespace sql::parser::statement {
     /**
      * The right hand side of this condition.
      */
-    std::shared_ptr<where> _rhs;
+    std::shared_ptr<Where> _rhs;
 
   public:
-    condition(
-      std::shared_ptr<where> lhs,
+    Condition(
+      std::shared_ptr<Where> lhs,
       Operator op,
-      std::shared_ptr<where> rhs
+      std::shared_ptr<Where> rhs
     ) : _lhs(lhs), _operator(op), _rhs(rhs) {}
 
-    std::shared_ptr<where> lhs() const;
-    std::shared_ptr<where> rhs() const;
+    std::shared_ptr<Where> lhs() const;
+    std::shared_ptr<Where> rhs() const;
     const Operator op() const;
   };
 
-  class comparison : public where {
+  class Comparison : public Where {
   private:
     /**
      * The column that the comparison is applied to.
@@ -106,7 +106,7 @@ namespace sql::parser::statement {
     const std::string _value;
 
   public:
-    comparison(
+    Comparison(
       const std::string column,
       Operator op,
       const std::string value
@@ -134,7 +134,7 @@ namespace sql::parser::statement {
    * Represents a definition of a column: its type, and its name (and eventually
    * any constraints or dependencies).
    */
-  class column_def {
+  class ColumnDef {
   private:
     /**
      * The name of the column.
@@ -162,7 +162,7 @@ namespace sql::parser::statement {
   /**
    * Represents a `SELECT` statement.
    */
-  class select {
+  class Select {
   private:
     /**
      * The name of the table to select from.
@@ -177,7 +177,7 @@ namespace sql::parser::statement {
     /**
      * The condition to filter upon.
      */
-    const std::optional<std::shared_ptr<where>> _condition;
+    const std::optional<std::shared_ptr<Where>> _condition;
   
   public:
     /**
@@ -195,14 +195,14 @@ namespace sql::parser::statement {
     /**
      * Gets a const reference to the where clause on this query.
      */
-    const std::optional<std::shared_ptr<where>>& condition() const;
+    const std::optional<std::shared_ptr<Where>>& condition() const;
   };
 
 
   /**
    * Represents an `INSERT INTO` query.
    */
-  class insert {
+  class Insert {
   private:
     /**
      * The table to insert into.
@@ -245,7 +245,7 @@ namespace sql::parser::statement {
   /**
    * Represents an `UPDATE` query.
    */
-  class update {
+  class Update {
   private:
     /**
      * The name of the table to insert into.
@@ -267,7 +267,7 @@ namespace sql::parser::statement {
     /**
      * An optional condition to filter using.
      */
-    const std::optional<std::shared_ptr<where>> _condition;
+    const std::optional<std::shared_ptr<Where>> _condition;
   public:
 
     /**
@@ -289,7 +289,7 @@ namespace sql::parser::statement {
      * Gets a const reference to the optional condition that is used to filter
      * this update statement.
      */
-    const std::optional<std::shared_ptr<where>>& condition() const;
+    const std::optional<std::shared_ptr<Where>>& condition() const;
   };
 
 
@@ -297,7 +297,7 @@ namespace sql::parser::statement {
   /**
    * Represents a `DELETE` query.
    */
-  class delete_row {
+  class DeleteRow {
   private:
     /**
      * The name of the table to delete from.
@@ -307,7 +307,7 @@ namespace sql::parser::statement {
     /**
      * The condition to delete using.
      */
-    const std::optional<std::shared_ptr<where>> _condition;
+    const std::optional<std::shared_ptr<Where>> _condition;
   public:
     /**
      * Gets a const reference to the name of the table to delete from.
@@ -317,13 +317,13 @@ namespace sql::parser::statement {
     /**
      * Gets a const reference to the WHERE clause.
      */
-    const std::optional<std::shared_ptr<where>>& condition() const;
+    const std::optional<std::shared_ptr<Where>>& condition() const;
   };
 
   /**
    * Represents the `CREATE TABLE ... (...)` command. 
    */
-  class create_table {
+  class CreateTable {
   private:
     /**
      * The name of the table to create.
@@ -333,7 +333,7 @@ namespace sql::parser::statement {
     /**
      * The definitions of columns to create the table with.
      */
-    const std::vector<column_def> _columns;
+    const std::vector<ColumnDef> _columns;
 
   public:
     /**
@@ -344,13 +344,13 @@ namespace sql::parser::statement {
     /**
      * Gets a const reference to the columns to create the table with.
      */
-    const std::vector<column_def>& columns() const;
+    const std::vector<ColumnDef>& columns() const;
   };
 
   /**
    * Represents the `DROP TABLE` command.
    */
-  class drop_table {
+  class DropTable {
   private:
     /** 
      * The name of the table to drop

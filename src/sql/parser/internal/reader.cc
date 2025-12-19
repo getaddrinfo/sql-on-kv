@@ -6,17 +6,17 @@
 #include <iterator>
 
 namespace sql::parser::detail {
-  bool token_reader__::empty() const {
+  bool TokenReader::empty() const {
     // If we are at the last slot, then our index is
     // one less than the number of tokens.
     return _index + 1 == _tokens.size();
   }
 
-  bool token_reader__::is(sql::lexer::Type ty) {
+  bool TokenReader::is(sql::lexer::Type ty) {
     return token().type() == ty;
   }
 
-  bool token_reader__::is_one_of(std::initializer_list<sql::lexer::Type> tys) {
+  bool TokenReader::is_one_of(std::initializer_list<sql::lexer::Type> tys) {
     for(const sql::lexer::Type ty : tys) {
       if (is(ty)) {
         return true;
@@ -26,7 +26,7 @@ namespace sql::parser::detail {
     return false;
   }
 
-  void token_reader__::next() {
+  void TokenReader::next() {
     if (empty()) {
       return;
     }
@@ -34,7 +34,7 @@ namespace sql::parser::detail {
     _index++;
   }
 
-  void token_reader__::back() {
+  void TokenReader::back() {
     if (_index == 0) {
       return;
     }
@@ -42,7 +42,7 @@ namespace sql::parser::detail {
     _index--;
   }
 
-  void token_reader__::must(sql::lexer::Type ty) {
+  void TokenReader::must(sql::lexer::Type ty) {
     CHECK(is(ty)) << "Token must be of type "
       << sql::lexer::Token::type_name(ty) 
       << " but is of type "
@@ -52,7 +52,7 @@ namespace sql::parser::detail {
       << highlight_current_token();
   }
 
-  void token_reader__::must_one_of(
+  void TokenReader::must_one_of(
     std::initializer_list<sql::lexer::Type> tys
   ) {
     // Instead of doing CHECK(is_one_of(tys)), we 
@@ -92,15 +92,15 @@ namespace sql::parser::detail {
       << highlight_current_token();
   }
 
-  const sql::lexer::Token& token_reader__::token() const {
+  const sql::lexer::Token& TokenReader::token() const {
     return _tokens.at(_index);
   }
 
-  void token_reader__::next_non_space() {
+  void TokenReader::next_non_space() {
     detail::trim_left(*this);
   }
 
-  void trim_left(token_reader__& reader) {
+  void trim_left(TokenReader& reader) {
     while (!reader.empty()) {
       const sql::lexer::Token& token = reader.token();
 

@@ -7,16 +7,16 @@ namespace sql::lexer::detail {
   /**
    * Consumes an identity from the consumption state.
    */
-  class ident_consumer__ {
+  class IdentConsumer {
   private:
     /**
      * The consumption state this consumer is consuming from.
      */
-    consumption_state__& _parent;
+    ConsumptionState& _parent;
   
   public:
-    ident_consumer__(
-      consumption_state__& parent
+    IdentConsumer(
+      ConsumptionState& parent
     ) : _parent(parent) {}
 
     /**
@@ -30,15 +30,15 @@ namespace sql::lexer::detail {
   /**
    * Consumes a string from the consumption state.
    */
-  class string_consumer__ {
+  class StringConsumer {
   private:
     /**
      * The consumption state this consumer is consuming from.
      */
-    consumption_state__& _parent;
+    ConsumptionState& _parent;
   public:
-    string_consumer__(
-      consumption_state__& parent
+    StringConsumer(
+      ConsumptionState& parent
     ) : _parent(parent) {}
 
     /**
@@ -52,15 +52,15 @@ namespace sql::lexer::detail {
   /**
    * Consumes an integer from the consumption state.
    */
-  class int_consumer__ {
+  class IntConsumer {
   private:
     /**
      * The consumption state this consumer is consuming from.
      */
-    consumption_state__& _parent;
+    ConsumptionState& _parent;
   public:
-    int_consumer__(
-      consumption_state__& parent
+    IntConsumer(
+      ConsumptionState& parent
     ) : _parent(parent) {}
 
     /**

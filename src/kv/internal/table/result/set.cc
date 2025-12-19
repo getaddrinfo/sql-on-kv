@@ -1,11 +1,11 @@
 #include "set.hh"
 
 namespace kv::detail::table::result {
-  void set::add(std::vector<value> values) {
-    add(row(values));
+  void Set::add(std::vector<Value> values) {
+    add(Row(values));
   }
 
-  void set::add(row r) {
+  void Set::add(Row r) {
     _rows.push_back(r);
   }
 }

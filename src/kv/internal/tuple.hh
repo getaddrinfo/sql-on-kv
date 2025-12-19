@@ -83,7 +83,7 @@ namespace kv::detail::tuple {
       : IntegerIdentifier<T>::pos;
   }
 
-  class packer {
+  class Packer {
     std::vector<uint8_t> _state;
 
     void _push(uint8_t);
@@ -123,10 +123,10 @@ namespace kv::detail::tuple {
     void push_uuid(std::string_view);
     void push_byte_string(std::span<uint8_t>);
     void push_unicode_string(std::string_view);
-    void push(const packer&);
+    void push(const Packer&);
 
     template <typename T>
-    packer& operator<<(T value) {
+    Packer& operator<<(T value) {
       push(value);
       return *this;
     }

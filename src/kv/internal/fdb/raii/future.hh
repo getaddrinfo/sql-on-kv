@@ -18,7 +18,7 @@ namespace kv::detail::fdb {
   /**
    * A wrapper over `FDBFuture*`, managing memory ownership.
    */
-  class future {
+  class Future {
   private:
     /**
      * The `FDBFuture` as a `shared_ptr` with a custom deleter.
@@ -26,7 +26,7 @@ namespace kv::detail::fdb {
     FuturePtr _ptr;
 
   public:
-    future(FDBFuture* ptr) : _ptr(ptr, future_deleter{}) {}
+    Future(FDBFuture* ptr) : _ptr(ptr, future_deleter{}) {}
 
     /**
      * Gets the raw pointer for operations via the `fdb_c`

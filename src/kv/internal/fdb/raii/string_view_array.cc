@@ -3,7 +3,7 @@
 #include "absl/log/check.h"
 
 namespace kv::detail::fdb {
-  string_view_array::string_view_array(future source) : _owner(source) {
+  StringViewArray::StringViewArray(future source) : _owner(source) {
     char** ptr;
     int size;
 
@@ -22,15 +22,15 @@ namespace kv::detail::fdb {
     }
   }
 
-  const std::vector<std::string_view>& string_view_array::get() const noexcept {
+  const std::vector<std::string_view>& StringViewArray::get() const noexcept {
     return _views;
   }
 
-  std::string_view string_view_array::at(size_t index) const {
+  std::string_view StringViewArray::at(size_t index) const {
     return _views.at(index);
   }
 
-  size_t string_view_array::size() const noexcept {
+  size_t StringViewArray::size() const noexcept {
     return _views.size();
   }
 }

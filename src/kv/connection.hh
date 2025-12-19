@@ -7,7 +7,7 @@
 
 namespace kv {
 
-  class connection {
+  class Connection {
     struct database_deleter {
       void operator()(FDBDatabase* ptr);
     };
@@ -18,8 +18,8 @@ namespace kv {
     std::shared_ptr<FDBDatabase> _db;
 
   public:
-    connection(const std::string& cluster_path) : _cluster_path(cluster_path), _db(nullptr) {}
-    ~connection();
+    Connection(const std::string& cluster_path) : _cluster_path(cluster_path), _db(nullptr) {}
+    ~Connection();
 
     /**
      * Gets a weak pointer to the database. Calls to the C API should upgrade this.

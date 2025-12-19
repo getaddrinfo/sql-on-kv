@@ -14,7 +14,7 @@
 namespace sql::parser::detail::statement::parser {
   using lexer::Type;
 
-  sql::parser::statement::select parse_select(detail::token_reader__& reader) {
+  sql::parser::statement::Select parse_select(detail::TokenReader& reader) {
     std::vector<std::string> fields;
 
     reader.must(Type::Select);
@@ -66,6 +66,6 @@ namespace sql::parser::detail::statement::parser {
     ::sql::parser::statement::detail::where::parse(reader);
 
     // TODO: Build the statement from the partial state produced by the parsers.
-    return sql::parser::statement::select{};
+    return sql::parser::statement::Select{};
   }
 }

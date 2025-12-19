@@ -11,18 +11,18 @@ namespace kv::detail::fdb {
     ::fdb_future_destroy(ptr);
   }
 
-  void future::block_until_ready() {
+  void Future::block_until_ready() {
     CHECK_EQ(::fdb_future_block_until_ready(raw()), 0)
       << "future failed to block until ready";
   }
 
-  bool future::ready() const {
+  bool Future::ready() const {
     fdb_bool_t is_ready = ::fdb_future_is_ready(raw());
     return is_ready != 0;
   }
 
   template <>
-  int64_t future::value<int64_t>() {
+  int64_t Future::value<int64_t>() {
     int64_t out;
     fdb_error_t err = ::fdb_future_get_int64(raw(), &out);
 
@@ -32,7 +32,7 @@ namespace kv::detail::fdb {
   }
 
   template <>
-  uint64_t future::value<uint64_t>() {
+  uint64_t Future::value<uint64_t>() {
     uint64_t out;
     fdb_error_t err = ::fdb_future_get_uint64(raw(), &out);
 
@@ -42,7 +42,7 @@ namespace kv::detail::fdb {
   }
 
   template <>
-  bool future::value<bool>() {
+  bool Future::value<bool>() {
     fdb_bool_t out;
     fdb_error_t err = ::fdb_future_get_bool(raw(), &out);
 
@@ -52,7 +52,7 @@ namespace kv::detail::fdb {
   }
 
   template <>
-  double future::value<double>() {
+  double Future::value<double>() {
     double out;
     fdb_error_t err = ::fdb_future_get_double(raw(), &out);
 
@@ -62,14 +62,14 @@ namespace kv::detail::fdb {
   }
 
   template <>
-  string_view_array future::value<string_view_array>() {
+  string_view_array Future::value<string_view_array>() {
     string_view_array out(*this);
     return out;
   }
 
 
   template <>
-  key_value_array future::value<key_value_array>() {
+  key_value_array Future::value<key_value_array>() {
     key_value_array out(*this);
     return out;
   }

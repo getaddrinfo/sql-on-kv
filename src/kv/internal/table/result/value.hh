@@ -21,18 +21,18 @@ namespace kv::detail::table::result {
     std::string
   >;
 
-  class value {
+  class Value {
     SqlValue _value;
 
-    value(int8_t v)      : _value(v) {}
-    value(int16_t v)     : _value(v) {}
-    value(int32_t v)     : _value(v) {}
-    value(int64_t v)     : _value(v) {}
-    value(uint8_t v)     : _value(v) {}
-    value(uint16_t v)    : _value(v) {}
-    value(uint32_t v)    : _value(v) {}
-    value(uint64_t v)    : _value(v) {}
-    value(std::string v) : _value(v) {}
+    Value(int8_t v)      : _value(v) {}
+    Value(int16_t v)     : _value(v) {}
+    Value(int32_t v)     : _value(v) {}
+    Value(int64_t v)     : _value(v) {}
+    Value(uint8_t v)     : _value(v) {}
+    Value(uint16_t v)    : _value(v) {}
+    Value(uint32_t v)    : _value(v) {}
+    Value(uint64_t v)    : _value(v) {}
+    Value(std::string v) : _value(v) {}
 
     /**
      * Returns true if the `value` holds type `T`.

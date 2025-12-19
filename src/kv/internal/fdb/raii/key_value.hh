@@ -13,7 +13,7 @@ namespace kv::detail::fdb {
    * the memory. Produced as part of a `key_value_array` which 
    * maintains ownership over the values.
    */
-  class key_value {
+  class KeyValue {
   private:
     /**
      * A view into the bytes of the key.
@@ -32,7 +32,7 @@ namespace kv::detail::fdb {
      * to `Future`, so it is not guaranteed to exist beyond the scope
      * of the `key_value_array` which produced it.
      */
-    key_value(FDBKeyValue kv) {
+    KeyValue(FDBKeyValue kv) {
       _key = std::span(
         (uint8_t*)kv.key,
         kv.key_length

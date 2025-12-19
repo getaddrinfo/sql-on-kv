@@ -19,14 +19,14 @@ namespace sql::parser {
    * different query types modelled as a class.
    */
   using ParserFn = std::function<
-    ParseResult (detail::token_reader__&)
+    ParseResult (detail::TokenReader&)
   >;
 
   /**
    * Maps from a Type to a function that can parse the given Type.
    */
   static std::unordered_map<sql::lexer::Type, ParserFn> _dispatcher = {
-    {sql::lexer::Type::Select, [](detail::token_reader__& reader) {
+    {sql::lexer::Type::Select, [](detail::TokenReader& reader) {
       return ParseResult(detail::statement::parser::parse_select(reader));
     }},
   };
@@ -34,7 +34,7 @@ namespace sql::parser {
   ParseResult parse(
     const std::vector<sql::lexer::Token>& tokens
   ) {
-    detail::token_reader__ reader(tokens);
+    detail::TokenReader reader(tokens);
     detail::trim_left(reader);
 
     if (reader.empty()) {

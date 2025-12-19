@@ -6,16 +6,16 @@
 #include <vector>
 
 namespace kv::detail::table::result {
-  class row {
+  class Row {
   private:
-    std::vector<value> _values;
+    std::vector<Value> _values;
 
   public:
-    row(
-      const std::vector<value> values
+    Row(
+      const std::vector<Value> values
     ) : _values(values) {}
 
-    const value& at(size_t index) const;
+    const Value& at(size_t index) const;
     const size_t size() const;
   };
 }

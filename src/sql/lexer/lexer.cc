@@ -15,7 +15,7 @@ namespace sql::lexer {
   std::vector<Token> lex(const std::string& source) {
     std::vector<Token> tokens;
     std::string_view view(source);
-    detail::consumption_state__ tokeniser(view);
+    detail::ConsumptionState tokeniser(view);
 
     while (!tokeniser.finished()) {
       sql::lexer::Token token = tokeniser.consume();

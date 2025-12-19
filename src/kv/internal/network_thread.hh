@@ -9,14 +9,14 @@ namespace kv::detail::fdb {
   void run();
 
   // TODO: Copy + Move constructors.
-  class network_thread {
+  class NetworkThread {
     std::unique_ptr<std::thread> _thread;
 
   public:  
-    network_thread();
-    network_thread(network_thread&) = delete;
-    network_thread& operator=(network_thread&) = delete;
-    ~network_thread();
+    NetworkThread();
+    NetworkThread(NetworkThread&) = delete;
+    NetworkThread& operator=(NetworkThread&) = delete;
+    ~NetworkThread();
   
   private:
       void stop();

@@ -4,7 +4,7 @@
 #include "absl/log/check.h"
 
 namespace kv::detail::fdb {
-  key_value_array::key_value_array(future source) : _owner(source) {
+  KeyValueArray::KeyValueArray(Future source) : _owner(source) {
     FDBKeyValue* ptr;
     int size = 0;
 
@@ -23,15 +23,15 @@ namespace kv::detail::fdb {
     }
   }
 
-  const size_t key_value_array::size() const noexcept {
+  const size_t KeyValueArray::size() const noexcept {
     return _entries.size();
   }
 
-  const std::vector<key_value>& key_value_array::get() const {
+  const std::vector<key_value>& KeyValueArray::get() const {
     return _entries;
   }
 
-  const key_value& key_value_array::at(size_t index) const {
+  const key_value& KeyValueArray::at(size_t index) const {
     return _entries.at(index);
   }
 }

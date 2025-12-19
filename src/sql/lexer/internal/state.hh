@@ -6,13 +6,13 @@
 #include "sql/lexer/token.hh"
 
 namespace sql::lexer::detail {
-  class consumption_state__ {
+  class ConsumptionState {
   private:
     const std::string_view _data;
     size_t _curr_index;
 
   public:
-    consumption_state__(const std::string_view data)
+    ConsumptionState(const std::string_view data)
       : _data(data), _curr_index(0) {}
 
     /**

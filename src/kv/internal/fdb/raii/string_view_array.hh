@@ -13,12 +13,12 @@ namespace kv::detail::fdb {
    * Maintains a reference to `Future`, keeping the underlying
    * memory alive as long as this class is alive.
    */
-  class string_view_array {
+  class StringViewArray {
   private:
     /**
      * The future that this array is from.
      */
-    future _owner;
+    Future _owner;
 
     /**
      * Views to the `char*` values returned by `fdb_c`.
@@ -30,7 +30,7 @@ namespace kv::detail::fdb {
      * Constructs a `string_view_array` from a future.
      * @note Fails if the future does not hold a string array.
      */
-    string_view_array(future source);
+    StringViewArray(Future source);
 
     /**
      * Gets the underlying vector that holds the string views.

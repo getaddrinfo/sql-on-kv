@@ -30,27 +30,27 @@ namespace sql::parser::statement {
     return 0;
   }
 
-  std::shared_ptr<where> condition::lhs() const {
+  std::shared_ptr<Where> Condition::lhs() const {
     return _lhs;
   }
   
-  std::shared_ptr<where> condition::rhs() const {
+  std::shared_ptr<Where> Condition::rhs() const {
     return _rhs;
   }
 
-  const Operator condition::op() const {
+  const Operator Condition::op() const {
     return _operator;
   }
 
-  const std::string& comparison::column() const {
+  const std::string& Comparison::column() const {
     return _column;
   }
 
-  const std::string& comparison::value() const {
+  const std::string& Comparison::value() const {
     return _value;
   }
 
-  const Operator comparison::op() const {
+  const Operator Comparison::op() const {
     return _operator;
   }
 }

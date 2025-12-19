@@ -23,8 +23,8 @@ namespace sql::parser::statement::detail::where {
     {sql::lexer::Type::Or, sql::parser::statement::Operator::Or}
   };
 
-  std::shared_ptr<sql::parser::statement::where> _do_parse_comparison(
-    token_reader__& reader
+  std::shared_ptr<sql::parser::statement::Where> _do_parse_comparison(
+    TokenReader& reader
   ) {
     // Must consist of IDENT COMPARISON VALUE
     reader.must(Type::Ident);
@@ -60,7 +60,7 @@ namespace sql::parser::statement::detail::where {
     // For now, assume it's a string.
     std::string value(reader.token().literal());
   
-    return std::make_shared<sql::parser::statement::comparison>(
+    return std::make_shared<sql::parser::statement::Comparison>(
       field,
       op,
       value
@@ -68,19 +68,19 @@ namespace sql::parser::statement::detail::where {
   }
 
   std::string _pretty_print_where(
-    std::shared_ptr<sql::parser::statement::where> node
+    std::shared_ptr<sql::parser::statement::Where> node
   ) {
-    std::shared_ptr<sql::parser::statement::comparison> comp 
-      = std::dynamic_pointer_cast<sql::parser::statement::comparison>(node);
+    std::shared_ptr<sql::parser::statement::Comparison> comp 
+      = std::dynamic_pointer_cast<sql::parser::statement::Comparison>(node);
 
-    std::shared_ptr<sql::parser::statement::condition> cond
-      = std::dynamic_pointer_cast<sql::parser::statement::condition>(node);
+    std::shared_ptr<sql::parser::statement::Condition> cond
+      = std::dynamic_pointer_cast<sql::parser::statement::Condition>(node);
 
     CHECK(comp || cond) << "Must be one of (comparison, condition)";
 
     if (cond) {
       return absl::StrFormat(
-        "comparison(op=%s, lhs=%s, rhs=%s)",
+        "Comparison(op=%s, lhs=%s, rhs=%s)",
         sql::parser::statement::operator_name(cond->op()),
         _pretty_print_where(cond->lhs()),
         _pretty_print_where(cond->rhs())
@@ -89,18 +89,20 @@ namespace sql::parser::statement::detail::where {
 
     if (comp) {
       return absl::StrFormat(
-        "condition(field=%s, op=%s, value=%s)",
+        "Condition(field=%s, op=%s, value=%s)",
         comp->column(),
         sql::parser::statement::operator_name(comp->op()),
         comp->value()
       );
     }
+
+    CHECK(false) << "unreachable";
   }
 
-  std::shared_ptr<sql::parser::statement::where> _do_parse_group(
-    token_reader__& reader
+  std::shared_ptr<sql::parser::statement::Where> _do_parse_group(
+    TokenReader& reader
   ) {
-    std::vector<std::shared_ptr<sql::parser::statement::where>> conditions;
+    std::vector<std::shared_ptr<sql::parser::statement::Where>> conditions;
     std::vector<sql::parser::statement::Operator> operators;
 
     // Cases:
@@ -171,17 +173,17 @@ namespace sql::parser::statement::detail::where {
       return conditions.at(0);
     }
     
-    std::shared_ptr<sql::parser::statement::where> result = ::detail::shunt(
+    std::shared_ptr<sql::parser::statement::Where> result = ::detail::shunt(
       conditions,
       operators
     );
 
     VLOG(1) << "Shunted result: " << _pretty_print_where(result);
 
-    return std::move(result);
+    return result;
   }
 
-  std::shared_ptr<sql::parser::statement::where> parse(token_reader__& reader) {
+  std::shared_ptr<sql::parser::statement::Where> parse(TokenReader& reader) {
     /*
     TODO: Convert these cases into standalone tests that validate the parse tree.
     

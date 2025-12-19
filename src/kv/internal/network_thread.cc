@@ -4,12 +4,14 @@
 
 #include <memory>
 
+#include "network_thread.hh"
+
 namespace kv::detail::fdb {
   void run() {
     ::fdb_run_network();
   }
 
-  void network_thread::stop() {
+  void NetworkThread::stop() {
     // This must finish blocking before `thread->join` is called
     // as per foundationdb docs.
     ::fdb_stop_network();
@@ -17,9 +19,9 @@ namespace kv::detail::fdb {
     _thread->join();
   }
 
-  network_thread::network_thread() : _thread(std::make_unique<std::thread>(&run)) {}
+  NetworkThread::NetworkThread() : _thread(std::make_unique<std::thread>(&run)) {}
 
-  network_thread::~network_thread() {
+  NetworkThread::~NetworkThread() {
     stop();
   }
 }

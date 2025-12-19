@@ -24,7 +24,7 @@ namespace sql::lexer::detail {
     {"TABLE", Type::Table}
   };
 
-  Token ident_consumer__::consume() {
+  Token IdentConsumer::consume() {
     size_t offset = _parent.index();
     size_t size = 0;
 
@@ -58,7 +58,7 @@ namespace sql::lexer::detail {
     return _parent.yield(Type::Ident, offset, size);
   }
 
-  Token string_consumer__::consume() {
+  Token StringConsumer::consume() {
     size_t offset = _parent.index();
     size_t size = 0;
 
@@ -90,7 +90,7 @@ namespace sql::lexer::detail {
     );
   }
 
-  Token int_consumer__::consume() {
+  Token IntConsumer::consume() {
     size_t offset = _parent.index();
     size_t size = 0;
 

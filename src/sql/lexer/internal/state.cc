@@ -18,7 +18,7 @@ namespace sql::lexer::detail {
     {'=', Type::Equals}
   };
 
-  Token consumption_state__::yield(Type type) {
+  Token ConsumptionState::yield(Type type) {
     Token token = yield(
       type,
       index(),
@@ -29,7 +29,7 @@ namespace sql::lexer::detail {
     return token;
   }
 
-  Token consumption_state__::yield(
+  Token ConsumptionState::yield(
     Type type,
     size_t offset,
     size_t length
@@ -38,7 +38,7 @@ namespace sql::lexer::detail {
     return token;
   }
 
-  Token consumption_state__::consume() {
+  Token ConsumptionState::consume() {
     char curr = current();
 
     if (_yieldables.contains(curr)) {
@@ -46,17 +46,17 @@ namespace sql::lexer::detail {
     }
 
     if (is_quote(curr)) {
-      detail::string_consumer__ consumer(*this);
+      detail::StringConsumer consumer(*this);
       return consumer.consume();
     }
 
     if (is_integer(curr)) {
-      detail::int_consumer__ consumer(*this);
+      detail::IntConsumer consumer(*this);
       return consumer.consume();
     }
 
     if (is_ident(curr)) {
-      detail::ident_consumer__ consumer(*this);
+      detail::IdentConsumer consumer(*this);
       return consumer.consume();
     }
 
@@ -66,7 +66,7 @@ namespace sql::lexer::detail {
     );
   }
 
-  bool consumption_state__::next() {
+  bool ConsumptionState::next() {
     if (_curr_index + 1 == _data.size()) {
       return false;
     }
@@ -75,7 +75,7 @@ namespace sql::lexer::detail {
     return true;
   }
 
-  void consumption_state__::back() {
+  void ConsumptionState::back() {
     if (_curr_index == 0) {
       return;
     }
@@ -83,7 +83,7 @@ namespace sql::lexer::detail {
     _curr_index--;
   }
 
-  const char consumption_state__::current() const {
+  const char ConsumptionState::current() const {
     CHECK(_curr_index < _data.size()) << "Out of bounds read: idx " 
       << _curr_index
       << " of "
@@ -93,15 +93,15 @@ namespace sql::lexer::detail {
     return _data.at(_curr_index);
   }
 
-  const size_t consumption_state__::index() const {
+  const size_t ConsumptionState::index() const {
     return _curr_index;
   }
   
-  const bool consumption_state__::finished() const {
+  const bool ConsumptionState::finished() const {
     return _curr_index + 1 == _data.size();
   }
 
-  const std::string_view consumption_state__::data() const {
+  const std::string_view ConsumptionState::data() const {
     return _data;
   }
 }
